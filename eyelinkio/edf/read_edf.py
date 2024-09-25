@@ -9,6 +9,7 @@ from os import path as op
 from pathlib import Path
 
 import numpy as np
+import numpy.lib.recfunctions as rfn
 
 try:
     from ._edf2py import (
@@ -73,14 +74,14 @@ class EDF(dict):
     def __init__(self, fname):
         if not has_edfapi:
             raise OSError("Could not load EDF api: %s" % why_not)
-        info, discrete, times, samples = _read_raw_edf(fname)
+        info, discrete, times, samples, orig_times = _read_raw_edf(fname)
         self.info = info
         self.info["filename"] = Path(fname).name
         self.discrete = discrete
         self._times = times
         self._samples = samples
         super().__init__(
-            info=info, discrete=discrete, times=times, samples=samples
+            info=info, discrete=discrete, times=times, samples=samples, orig_times=orig_times
         )
 
     def __repr__(self):
@@ -226,12 +227,13 @@ def _read_raw_edf(fname):
             continue
         for sub_key in ("stime", "etime"):
             if sub_key in discrete[key].dtype.names:
+                discrete[key] = rfn.append_fields(discrete[key], f"orig_{sub_key}", discrete[key][sub_key], usemask=False)
                 _adjust_time(discrete[key][sub_key], orig_times, times)
 
     _extract_calibration(info, discrete["messages"])
 
     # now we correct our time offsets
-    return info, discrete, times, data
+    return info, discrete, times, data, orig_times
 
 
 def _adjust_time(x, orig_times, times):
