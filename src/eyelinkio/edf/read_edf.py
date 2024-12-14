@@ -81,7 +81,11 @@ class EDF(dict):
         self._times = times
         self._samples = samples
         super().__init__(
-            info=info, discrete=discrete, times=times, samples=samples, orig_times=orig_times
+            info=info,
+            discrete=discrete,
+            times=times,
+            samples=samples,
+            orig_times=orig_times,
         )
 
     def __repr__(self):
@@ -227,7 +231,12 @@ def _read_raw_edf(fname):
             continue
         for sub_key in ("stime", "etime"):
             if sub_key in discrete[key].dtype.names:
-                discrete[key] = rfn.append_fields(discrete[key], f"orig_{sub_key}", discrete[key][sub_key], usemask=False)
+                discrete[key] = rfn.append_fields(
+                    discrete[key],
+                    f"orig_{sub_key}",
+                    discrete[key][sub_key],
+                    usemask=False,
+                )
                 _adjust_time(discrete[key][sub_key], orig_times, times)
 
     _extract_calibration(info, discrete["messages"])
