@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 
@@ -23,6 +25,10 @@ def test_read_raw():
             # XXX: ideally we should get a binocular file with a calibration
             assert edf_file["info"]["eye"] == "BINOCULAR"
             assert len(edf_file["discrete"]["blinks"]) == 195
+            np.testing.assert_equal(edf_file["discrete"]["starts"]["stime"][0], 0.0)
+            np.testing.assert_almost_equal(
+                edf_file["discrete"]["ends"]["stime"][-1], 199.644
+                )
 
         elif fname.name == "test_2_raw.edf":  # First test file has this property
             for kind in ['saccades', 'fixations', 'blinks']:
@@ -163,3 +169,9 @@ def test_to_mne():
             np.testing.assert_equal(raw.ch_names, want_chs)
         else:
             raise ValueError(f"Unexpected file: {fname}")
+
+def test_edfapi_not_installed():
+    """Test that an error is raised if SR Research's edfapi is not installed."""
+    with patch("eyelinkio.edf.read.has_edfapi", False):
+            with pytest.raises(OSError, match="Could not load EDF api"):
+                read_edf(fnames[0])
