@@ -73,7 +73,7 @@ class EDF(dict):
 
     def __init__(self, fname):
         if not has_edfapi:
-            raise OSError("Could not load EDF api: %s" % why_not)
+            raise OSError(f"Could not load EDF api: {why_not}")
         info, discrete, times, samples, orig_times = _read_raw_edf(fname)
         self.info = info
         self.info["filename"] = Path(fname).name
